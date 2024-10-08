@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ACTION_TYPE, CELL_TYPE } from "./constants";
+import axios from "./utils/axios";
 
 function App() {
   let initialGridState = Array(400)
@@ -22,6 +23,8 @@ function App() {
         return "bg-red-400";
       case CELL_TYPE.BLOCKED:
         return "bg-gray-400";
+      case CELL_TYPE.PATH:
+        return "bg-blue-400";
       default:
         break;
     }
@@ -63,7 +66,39 @@ function App() {
       });
     }
   }
-  function handleSubmit() {}
+  async function handleSubmit() {
+    setActionType(ACTION_TYPE.SUBMIT);
+    let startCell = grid.find((cell) => cell.cellType === CELL_TYPE.START);
+    let endCell = grid.find((cell) => cell.cellType === CELL_TYPE.END);
+    if (!startCell || !endCell) {
+      return;
+    }
+    let startCellCoord = [parseInt(startCell.id / 20), startCell.id % 20];
+    let endCellCoord = [parseInt(endCell.id / 20), endCell.id % 20];
+    const res = await axios.post("/find-path", {
+      start: startCellCoord,
+      end: endCellCoord,
+    });
+    let { path = [] } = res.data;
+    path = path.map((cell) => cell[0] * 20 + cell[1]);
+    path = path.filter(
+      (cellId) => cellId !== startCell.id && cellId !== endCell.id
+    );
+    setGrid((state) => {
+      let newState = [...state];
+      path.forEach((cellId) => {
+        newState[cellId].cellType = CELL_TYPE.PATH;
+      });
+      return newState;
+    });
+  }
+
+  function handleSetActionType(type) {
+    if (actionType === ACTION_TYPE.SUBMIT) {
+      setGrid(initialGridState);
+    }
+    setActionType(type);
+  }
 
   return (
     <div className="flex justify-center gap-10 my-10">
@@ -85,20 +120,20 @@ function App() {
         <button
           className="border-teal-400 border-[1px] border-solid rounded px-4"
           onClick={() => {
-            setActionType(ACTION_TYPE.START);
+            handleSetActionType(ACTION_TYPE.START);
           }}
         >
           Select Start Cell
         </button>
         <button
           className="border-red-400 border-[1px] border-solid rounded px-4"
-          onClick={() => setActionType(ACTION_TYPE.END)}
+          onClick={() => handleSetActionType(ACTION_TYPE.END)}
         >
           Select End Cell
         </button>
         <button
           className="border-gray-400 border-[1px] border-solid rounded px-4"
-          onClick={() => setActionType(ACTION_TYPE.BLOCK)}
+          onClick={() => handleSetActionType(ACTION_TYPE.BLOCK)}
         >
           Select Blocked Cell
         </button>
