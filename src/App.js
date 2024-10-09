@@ -70,14 +70,21 @@ function App() {
     setActionType(ACTION_TYPE.SUBMIT);
     let startCell = grid.find((cell) => cell.cellType === CELL_TYPE.START);
     let endCell = grid.find((cell) => cell.cellType === CELL_TYPE.END);
+    let obstacleCells =
+      grid.filter((cell) => cell.cellType === CELL_TYPE.BLOCKED) ?? [];
     if (!startCell || !endCell) {
       return;
     }
     let startCellCoord = [parseInt(startCell.id / 20), startCell.id % 20];
     let endCellCoord = [parseInt(endCell.id / 20), endCell.id % 20];
+    let obstacleCellCoords = obstacleCells.map((cell) => [
+      parseInt(cell.id / 20),
+      cell.id % 20,
+    ]);
     const res = await axios.post("/find-path", {
       start: startCellCoord,
       end: endCellCoord,
+      obstacles: obstacleCellCoords,
     });
     let { path = [] } = res.data;
     path = path.map((cell) => cell[0] * 20 + cell[1]);
@@ -145,7 +152,7 @@ function App() {
         </button>
         <button
           className="border-red-400 bg-red-400 border-[1px] border-solid rounded px-4"
-          onClick={() => setGrid(initialGridState)}
+          onClick={() => handleSetActionType(ACTION_TYPE.START)}
         >
           Reset
         </button>
