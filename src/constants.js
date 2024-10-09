@@ -14,5 +14,5 @@ export const ACTION_TYPE = {
 };
 
 export const ApiConstants = {
-  baseUrl: "http://localhost:5000"
+  baseUrl: "https://short-path-game.onrender.com"
 }
